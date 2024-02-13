@@ -6,9 +6,9 @@ import jwt from "jsonwebtoken";
 
 const generateAccessTokensandRefreshTokens = async(userId) => {
     try {
-        const user = await User.findById(userId);
-        const accessToken = await user.generateAccessToken();
-        const refreshToken = await user.generateRefreshToken();
+       const user = await User.findById(userId);
+       const accessToken = user.generateAccessToken();
+       const refreshToken = user.generateRefreshToken();
 
         user.refreshToken = refreshToken;
         await user.save({validateBeforeSave: false});
@@ -68,6 +68,67 @@ const registerUser = asyncHandler(async(req,res) => {
   }
 })
 
+const loginUser = asyncHandler(async(req,res) => {
+
+    //Steps for the loginUser
+    //Get the data from the frontend
+    //Check if the user logged in via username or email
+    //Check if the user exist or not
+    //Check for the password(Check if the password is matched or not)
+    //Access and Refresh Token
+    //Send Cookie
+    const {email , username , password} = req.body;
+
+    if(!(username || email))
+    {
+        return new ApiError(400, "Username or Password is required");
+    }
+
+   const user = await User.findOne({$or: [{username}, {email}]});
+
+
+   if(!user)
+   {
+    return new ApiError(404, "User does not exist");
+   }
+
+   const isPasswordValid = await user.isPasswordCorrect(password);
+
+   if(!isPasswordValid)
+   {
+    return new ApiError(401, "Invalid user Credentials");
+   }
+
+   const {accessToken, refreshToken} = 
+   await generateAccessTokensandRefreshTokens(user._id);
+
+   const loggedInUser = await User.findById(user._id)
+   .select("-password -refreshToken");
+
+   const options = {
+    httpOnly : true,
+    secure : true
+   };
+
+   return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+        new ApiResponse(200, 
+            {
+                user: loggedInUser,
+                accessToken,
+                refreshToken
+            },
+            "User logged in Successfully"
+            )
+    )
+
+
+
+})
+
 const refreshAccessToken = asyncHandler(async(req,res) => {
     try {
         const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
@@ -113,4 +174,4 @@ const refreshAccessToken = asyncHandler(async(req,res) => {
 
 
 
-export {registerUser, refreshAccessToken}
+export {registerUser, refreshAccessToken, loginUser}
