@@ -1,1 +1,1 @@
-export const DB_NAME="TaskSecret"
+export const DB_NAME="TaskSecure"

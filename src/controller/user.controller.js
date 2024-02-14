@@ -37,34 +37,38 @@ const registerUser = asyncHandler(async (req, res) => {
     if ([username, email, password].some((field) => field?.trim() === "")) {
       throw new ApiError(400, "All Fields are compulsory");
     }
+    console.log("warning 1");
 
     const existedUser = await User.findOne({
       $or: [{ username }, { email }],
     });
-
+ console.log("warning 2");
     if (existedUser) {
       throw new ApiError(409, "User with email or username already exists");
     }
-
+ console.log("warning 3");
     const user = await User.create({
       username,
       email,
       password,
     });
-
+ console.log("warning 4");
     const createdUser = await User.findById(user._id).select(
       "-password -refreshToken"
     );
-
+       console.log("warning 5");
     if (!createdUser) {
-      throw new ApiError(500, "Something went wrong while registering a User");
+      throw new ApiError(500, "Something went wrong while registering a User 1");
     }
 
+     console.log("warning 6");
     return res
       .status(201)
       .json(new ApiResponse(200, createdUser, "User registered Successfully"));
   } catch (error) {
-    throw new ApiError(500, "Something went wrong while registering the user");
+    console.log(error);
+    throw new ApiError(500, "Something went wrong while registering the user", error);
+    
   }
 });
 
