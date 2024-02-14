@@ -16,7 +16,9 @@ app.use(cors({
 import userRouter from './routes/user.routes.js';
 import taskRouter from './routes/task.routes.js';
 
-
+app.get("/", (req,res) => {
+    res.send("<h1>Welcome to the TaskSecure</h1>");
+})
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/tasks",taskRouter)
 
